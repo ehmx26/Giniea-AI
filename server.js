@@ -11,16 +11,17 @@ app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
         if (!message) {
-            return res.status(400).json({ error: 'Message is required' });
+            return res.status(400).json({ error: 'Message is required.' });
         }
 
         const apiKey = process.env.GEMINI_API_KEY;
         if (!apiKey) {
-            return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set on Render.' });
+            return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not configured on Render.' });
         }
 
-        // Using the stable gemini-3.5-flash model endpoint
-       const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+        // Using the stable gemini-3.5-flash endpoint
+        const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
+
         const apiResponse = await fetch(apiEndpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -33,15 +34,15 @@ app.post('/api/chat', async (req, res) => {
 
         if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             const reply = data.candidates[0].content.parts[0].text;
-            res.json({ reply });
+            return res.json({ reply });
         } else if (data.error) {
-            res.status(500).json({ error: data.error.message || 'Gemini API Error' });
+            return res.status(500).json({ error: data.error.message || 'Gemini API Error' });
         } else {
-            res.status(500).json({ error: 'Invalid response structure received from Gemini API.' });
+            return res.status(500).json({ error: 'Unexpected response format from Gemini API.' });
         }
     } catch (error) {
         console.error('Server Error:', error);
-        res.status(500).json({ error: 'Failed to generate AI response.' });
+        return res.status(500).json({ error: 'Internal server error connecting to AI.' });
     }
 });
 
