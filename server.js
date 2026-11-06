@@ -19,7 +19,8 @@ app.post('/api/chat', async (req, res) => {
             return res.status(500).json({ error: 'GEMINI_API_KEY environment variable is not set on Render.' });
         }
 
-const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+        // Using the stable gemini-3.5-flash model endpoint
+        const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.5-flash:generateContent?key=${apiKey}`;
 
         const apiResponse = await fetch(apiEndpoint, {
             method: 'POST',
@@ -30,9 +31,7 @@ const apiEndpoint = `https://generativelanguage.googleapis.com/v1beta/models/gem
         });
 
         const data = await apiResponse.json();
-        console.log('Gemini API Response:', JSON.stringify(data));
 
-        // Robust parsing of candidates and parts
         if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             const reply = data.candidates[0].content.parts[0].text;
             res.json({ reply });
