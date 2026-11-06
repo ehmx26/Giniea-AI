@@ -7,7 +7,6 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.static(path.join(__dirname)));
 
-// Chat API endpoint using direct Google Gemini REST API (Zero dependencies!)
 app.post('/api/chat', async (req, res) => {
     try {
         const { message } = req.body;
@@ -26,17 +25,21 @@ app.post('/api/chat', async (req, res) => {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                contents: [{ parts: [{ text: message }] }]
+                contents: [{ role: 'user', parts: [{ text: message }] }]
             })
         });
 
         const data = await apiResponse.json();
+        console.log('Gemini API Response:', JSON.stringify(data));
 
-        if (data.candidates && data.candidates[0].content.parts[0].text) {
+        // Robust parsing of candidates and parts
+        if (data.candidates && data.candidates[0]?.content?.parts?.[0]?.text) {
             const reply = data.candidates[0].content.parts[0].text;
             res.json({ reply });
+        } else if (data.error) {
+            res.status(500).json({ error: data.error.message || 'Gemini API Error' });
         } else {
-            res.status(500).json({ error: 'Invalid response received from Gemini API.' });
+            res.status(500).json({ error: 'Invalid response structure received from Gemini API.' });
         }
     } catch (error) {
         console.error('Server Error:', error);
